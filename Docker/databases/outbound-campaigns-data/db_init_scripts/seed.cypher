@@ -275,7 +275,7 @@ CREATE(a:ChannelProvider {
 					system: true,
 					createdOn: localdatetime(),
 					updatedOn: localdatetime(),
-					properties: '{					"authToken":"lr80srOINd9qx1X22BBnVFkzcrFisIed2XZjuBC/b9yx5GHzCNjklOZ21JUZPQIIwUG8DRDplAyjAIOBFkBIXDgDxctBefHsIw7xqwzeD7mD0LfWYhtbr37EP4r62u3BR5mHIngfTvWfoZAdJq5hQcsYH9KCM/tzFZgqLF0v55QYai2VmbBu//fA7gJ2cF4Zy00s47aWcqEpPAStGqRI4GPOoqtWAspO/QXyYzrfrNyzHA7u70KFEau9w5a03fy/",
+					properties: '{					"authToken":"QXy*",
 					"phoneId":"106016102510547"}'}),
 	   (e:ChannelProvider {
 					id: apoc.create.uuid(),
