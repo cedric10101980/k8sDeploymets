@@ -1,0 +1,74 @@
+version: '2.2'
+
+services:
+    
+  neo4j-campaigns:
+    container_name: "neo4j-campaigns"
+    build:
+      context: outbound-campaigns-data/
+    ports:
+      - '${NEO4J_CAMPAIGNS_HTTP_PORT:-}:7474'
+      - '${NEO4J_CAMPAIGNS_BOLT_PORT:-}:7687'
+    expose:
+      - "${NEO4J_CAMPAIGNS_BOLT_PORT:-}"
+      - "${NEO4J_CAMPAIGNS_HTTP_PORT:-}"
+    volumes:
+      - neo4j_campaigns-data:/var/lib/neo4j/data
+      - neo4j_campaigns-logs:/var/lib/neo4j/logs
+      - neo4j_campaigns-import:/var/lib/neo4j/import
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-}/${NEO4J_PASSWORD:-}
+      - NEO4J_server_directories_import=/
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,algo.*
+      - NEO4J_server_memory_pagecache_size=3g
+      - NEO4J_server_memory_heap_max__size=3g
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_db_tx__log_rotation_retention__policy=1G size
+    healthcheck:
+      test: "exit 0"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://${ELK_HOST_NAME:-}:${ELK_PORT:-}"  
+        tag: "neo4j-campaigns"
+    restart: always
+      
+  neo4j-contacts:
+    container_name: "neo4j-contacts"
+    build:
+      context: outbound-contacts-data/
+    ports:
+      - '${NEO4J_CONTACTS_HTTP_PORT:-}:7474'
+      - '${NEO4J_CONTACTS_BOLT_PORT:-}:7687'
+    volumes:
+      - 'neo4j_campaigns-data:/contacts-data'
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-}/${NEO4J_PASSWORD:-}
+      - NEO4J_server_directories_import=/
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,algo.*
+      - NEO4J_server_memory_pagecache_size=3g
+      - NEO4J_server_memory_heap_max__size=3g
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_db_tx__log_rotation_retention__policy=1G size
+
+    healthcheck:
+      test: "exit 0"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://${ELK_HOST_NAME:-}:${ELK_PORT:-}"  
+        tag: "neo4j-contacts"
+    restart: always
+    
+  cosmosdb-emulator:
+    container_name: "cosmosdb-emulator"
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
+    ports:
+      - "8081:8081"
+      - "1234:1234"
+    restart: always
+volumes:
+  neo4j_campaigns-data:
+  neo4j_campaigns-logs:
+  neo4j_campaigns-import:
+  neo4j_contacts-data:

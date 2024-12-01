@@ -1,0 +1,37 @@
+---
+version: '2'
+services:
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:${CP_VERSION}
+    ports: 
+      - 8082:8081
+    container_name: sn-schema-registry
+    environment: 
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://${HOST_NAME:-}:32400'
+  kafka-rest:
+    image: confluentinc/cp-kafka-rest:${CP_VERSION}
+    hostname: kafka-rest
+    ports:
+    - "8092:8092"
+    depends_on:
+      - schema-registry
+    environment:
+      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_REST_SCHEMA_REGISTRY_URL: schema-registry:8082
+      KAFKA_REST_HOST_NAME: kafka-rest
+      KAFKA_REST_LISTENERS: http://kafka-rest:8092
+      KAFKA_REST_BOOTSTRAP_SERVERS: ${HOST_NAME:-}:32400,${HOST_NAME:-}:32401,${HOST_NAME:-}:32402
+      KAFKA_REST_ADVERTISED_LISTENERS: http://${HOST_NAME:-}:8092
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: control-center
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: ${HOST_NAME:-}:32400,${HOST_NAME:-}:32401,${HOST_NAME:-}:32402
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      PORT: 9021
+
