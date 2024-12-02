@@ -65,10 +65,21 @@ services:
     image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
     ports:
       - "8081:8081"
-      - "1234:1234"
+      - "8082:1234"
     restart: always
+
+
+  mongodb:
+    image: mongo:6-jammy
+    ports:
+      - '27017:27017'
+    volumes:
+      - dbdata6:/data/db
+
 volumes:
   neo4j_campaigns-data:
   neo4j_campaigns-logs:
   neo4j_campaigns-import:
   neo4j_contacts-data:
+  mongo-data:
+  dbdata6:
