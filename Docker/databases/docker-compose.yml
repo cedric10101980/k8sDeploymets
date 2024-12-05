@@ -83,7 +83,8 @@ volumes:
   neo4j_campaigns-data:
   neo4j_campaigns-logs:
   neo4j_campaigns-import:
-  neo4j_contacts-data:
+  neo4j_contact:
+  postgres-data:
   mongo-data:
   dbdata6:
   cosmosdbdata:
