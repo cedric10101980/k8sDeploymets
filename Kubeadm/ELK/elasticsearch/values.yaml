@@ -123,10 +123,10 @@ networkHost: "0.0.0.0"
  
 volumeClaimTemplate:
   accessModes: ["ReadWriteOnce"]
-  storageClassName: "managed-csi"
+  storageClassName: "local-path"
   resources:
     requests:
-      storage: 100Gi
+      storage: 75Gi
  
 rbac:
   create: false
@@ -190,7 +190,7 @@ priorityClassName: ""
 # Hard means that by default pods will only be scheduled if there are enough nodes for them
 # and that they will never end up on the same node. Setting this to soft will do this "best effort"
 #antiAffinity: "hard"
-antiAffinity: "hard"
+antiAffinity: "soft"
  
 # This is the node affinity settings as defined in
 # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature

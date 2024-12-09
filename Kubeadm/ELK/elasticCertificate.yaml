@@ -2,6 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: elastic-certificates
+  namespace: elk-logger
 spec:
   # Secret names are always required.
   secretName: elastic-certificates
@@ -41,7 +42,7 @@ spec:
     - elasticsearch-master
   # Issuer references are always required.
   issuerRef:
-    name: issuing-ca-clusterissuer
+    name: selfsigned-cluster-issuer
     # We can reference ClusterIssuers by changing the kind here.
     # The default value is Issuer (i.e. a locally namespaced Issuer)
     kind: ClusterIssuer
