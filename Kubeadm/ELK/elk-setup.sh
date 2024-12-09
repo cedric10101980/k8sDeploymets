@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
  
 NAME=$2
 NS=elk-logger
