@@ -26,7 +26,7 @@ install)
         #helm install --debug --dry-run --name ${NAME} --namespace ${NS} -f ${NAME}.yaml ${CHART} > ${NAME}-debug.yaml
         ;;
 update)
-        helm upgrade elk-"${NAME}" "${RELEASE}" "${CHART}" --namespace ${NS} -f "${VALUES}"
+        helm upgrade elk-"${NAME}" "${CHART}" --namespace ${NS} -f "${VALUES}"
         ;;
 *)
         display_usage
