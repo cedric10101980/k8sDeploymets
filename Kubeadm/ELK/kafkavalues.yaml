@@ -48,7 +48,7 @@ port:
   kafkaInternal: 9092
   kafkaExternal: 9094
 externalAccess:
-  enabled: false
+  enabled: true
   initNodePort: 32400
 ## turn to support nodePort in docker desktop
 isDocker: false

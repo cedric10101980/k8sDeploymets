@@ -26,7 +26,19 @@ install)
         #helm install --debug --dry-run --name ${NAME} --namespace ${NS} -f ${NAME}.yaml ${CHART} > ${NAME}-debug.yaml
         ;;
 update)
-        helm upgrade elk-"${NAME}" "${CHART}" --namespace ${NS} -f "${VALUES}"
+# Debug output to check variable values
+        echo "NAME: ${NAME}"
+        echo "CHART: ${CHART}"
+        echo "NS: ${NS}"
+        echo "VALUES: ${VALUES}"
+
+        # Check if the values file exists
+        if [[ ! -f "${VALUES}" ]]; then
+          echo "Error: Values file ${VALUES} not found."
+          exit 1
+        fi
+
+        helm upgrade "${NAME}" "${CHART}" --namespace ${NS} -f "${VALUES}"
         ;;
 *)
         display_usage
