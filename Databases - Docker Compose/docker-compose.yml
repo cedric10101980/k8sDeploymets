@@ -97,6 +97,25 @@ services:
     volumes:
       - mongo-data:/data/mongo-db
 
+  cassandra:
+    image: cassandra:3.11.11
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - "MAX_HEAP_SIZE=256M"
+      - "HEAP_NEWSIZE=128M"
+
+  mysql:
+      image: mysql:5.7
+      volumes:
+        - mysql_data:/var/lib/mysql
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: keycloak
+        MYSQL_USER: keycloak
+        MYSQL_PASSWORD: password
+
 volumes:
   neo4j_campaigns-data:
   neo4j_campaigns-logs:
