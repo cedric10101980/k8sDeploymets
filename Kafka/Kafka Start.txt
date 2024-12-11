@@ -1,0 +1,12 @@
+https://www.linkedin.com/learning/complete-guide-to-apache-kafka-for-beginners/kafka-course-introduction?u=85185346
+
+https://www.linkedin.com/learning/apache-kafka-essential-training-getting-started-22398044/getting-started-with-apache-kafka?u=85185346
+
+Install Kafka
+https://conduktor.io/get-started
+
+https://docs.conduktor.io/platform/get-started/installation/get-started/docker/
+
+
+
+

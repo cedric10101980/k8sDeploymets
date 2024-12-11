@@ -72,23 +72,38 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  bootstrap:
+    image: postgres:latest
+    container_name: bootstrap_db
+    environment:
+      POSTGRES_DB: postgresdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      PGPASSWORD: test
+    depends_on:
+      - postgres
+    entrypoint: ["sh", "-c", "until pg_isready -h postgres -U postgres; do sleep 1; done; psql -h postgres -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'testdb'\" | grep -q 1 || psql -h postgres -U postgres -c 'CREATE DATABASE testdb;'"]
+
+
   mongodb:
-    image: mongo:6-jammy
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    container_name: mongo-db
     ports:
-      - '27017:27017'
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=
+    command: ["mongod", "--bind_ip_all"] # Allow connections from all IPs
     volumes:
-      - dbdata6:/data/db
+      - mongo-data:/data/mongo-db
 
 volumes:
   neo4j_campaigns-data:
   neo4j_campaigns-logs:
   neo4j_campaigns-import:
   neo4j_contact:
-  postgres-data:
   mongo-data:
-  dbdata6:
-  cosmosdbdata:
-
+  postgres-data:
 networks:
   cosmosdb-network:
     driver: bridge
