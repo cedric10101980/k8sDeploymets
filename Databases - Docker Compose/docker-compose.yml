@@ -71,6 +71,17 @@ services:
       POSTGRES_DB: postgresdb
     volumes:
       - postgres-data:/var/lib/postgresql/data
+ 
+  bootstrap:
+    image: postgres:latest
+    container_name: bootstrap_db
+    environment:
+      POSTGRES_DB: postgresdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      PGPASSWORD: test
+    depends_on:
+      - postgres
     entrypoint: ["sh", "-c", "until pg_isready -h postgres -U postgres; do sleep 1; done; psql -h postgres -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'testdb'\" | grep -q 1 || psql -h postgres -U postgres -c 'CREATE DATABASE testdb;'"]
 
   mongodb:
