@@ -85,16 +85,23 @@ services:
     entrypoint: ["sh", "-c", "until pg_isready -h postgres -U postgres; do sleep 1; done; psql -h postgres -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname = 'testdb'\" | grep -q 1 || psql -h postgres -U postgres -c 'CREATE DATABASE testdb;'"]
 
   mongodb:
-    image: mongodb/mongodb-community-server:6.0-ubi8
-    container_name: mongo-db
+    image: mongo:latest
+    container_name: mongodb
+    hostname: mongodb
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongodb-data:/data/db/
+      - mongodb-log:/var/log/mongodb/
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    command: ["mongod", "--bind_ip_all"] # Allow connections from all IPs
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=mongo
-      - MONGO_INITDB_ROOT_PASSWORD=
-    command: ["mongod", "--bind_ip_all"] # Allow connections from all IPs
-    volumes:
-      - mongo-data:/data/db
+    networks:
+      - mongodb_network
 
   cassandra:
     image: cassandra:3.11.11
@@ -123,6 +130,16 @@ volumes:
   mongo-data:
   postgres-data:
   mysql_data:
+  mongodb-data:
+    driver: local
+    name: mongo-data
+  mongodb-log:
+    driver: local
+    name: mongo-log
 networks:
   cosmosdb-network:
     driver: bridge
+  mongodb_network:
+    driver: bridge
+    name: mongo-network
+
