@@ -1,0 +1,31 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log  # Path to Docker container logs
+      
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+processors:
+  - add_cloud_metadata: ~
+
+output.kafka:
+  enabled: true
+  hosts: ["${KAFKA_HOST}:${KAFKA_PORT}"]
+  partition.round_robin:
+    reachable_only: false
+  topic: "filebeat-docker-logs"
+  loadbalance: true
+  worker: 10
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
+  bulk_max_size: 4096

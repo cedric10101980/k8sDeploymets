@@ -1,0 +1,282 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heartbeat-deployment-config
+  namespace: kube-system
+  labels:
+    k8s-app: heartbeat
+data:
+  heartbeat.yml: |  
+    heartbeat.monitors:
+    - type: http
+      id: outbound-campaigns-api
+      name: Outreach Campaigns API
+      enabled: true
+      tags: obaas-at2-lab
+      schedule: '@every 10s'
+      urls: ["https://outbound-campaigns-api.outbound-campaigns-at2/health"]
+      ssl:
+         verification_mode: 'none'
+    - type: http
+      id: outbound-contacts-api
+      name: Outreach Contacts API
+      enabled: true
+      tags: obaas-at2-lab
+      schedule: '@every 10s'
+      urls: ["https://outbound-contacts-api.outbound-contacts-at2/health"]
+      ssl:
+         verification_mode: 'none'
+    - type: http
+      id: outbound-simulators
+      name: Outreach Simulator
+      enabled: true
+      tags: obaas-at2-lab
+      schedule: '@every 10s'
+      urls: ["https://outbound-simulators.outbound-campaigns-at2/health"]
+      ssl:
+         verification_mode: 'none'
+          
+    - type: http
+      id: outbound-campaigns-actors
+      name: Outreach Campaign Actors
+      enabled: true
+      tags: obaas-at2-lab
+      schedule: '@every 10s'
+      urls: ["http://outbound-campaigns-actors.outbound-campaigns-actors-at2:9058/alive"]
+      ssl:
+         verification_mode: 'none'
+               
+    - type: http
+      id: outbound-contacts-actors
+      name: Outreach Contacts Actors
+      enabled: true
+      tags: obaas-at2-lab
+      schedule: '@every 10s'
+      urls: ["http://outbound-contacts-actors.outbound-contacts-actors-at2:9158/alive"]
+      ssl:
+         verification_mode: 'none'
+    - type: http
+      id: neo4j-campaigns-db
+      name: Outreach Campaigns Neo4j DB
+      enabled: true
+      tags: obaas-at2-lab
+      schedule: '@every 10s'
+      urls: ["http://outbound-campaigns-db.outbound-campaigns-at2:9074"]
+      check.request.method: "GET"
+      check.request.headers: ["Authorization: Basic bmVvNGo6dGVzdA=="]
+      check.response.status: [200]
+    - type: http
+      id: neo4j-contacts-db
+      name: Outreach Contacts Neo4j DB
+      enabled: true
+      tags: obaas-at2-lab
+      schedule: '@every 10s'
+      urls: ["http://outbound-contacts-db.outbound-contacts-at2:9174"]
+      check.request.method: "GET"
+      check.request.headers: ["Authorization: Basic bmVvNGo6dGVzdA=="]
+      check.response.status: [200]
+    - type: tcp
+      id: cassandra-db
+      name: Outreach Cassandra DB
+      tags: obaas-at2-lab
+      enabled: true
+      schedule: '@every 10s'
+      hosts: ["outbound-cassandra-db.outbound-contacts-at2:9042"]
+       
+    processors:
+      - add_cloud_metadata:
+ 
+    cloud.id: ${ELASTIC_CLOUD_ID}
+    cloud.auth: ${ELASTIC_CLOUD_AUTH}
+ 
+    output.elasticsearch:
+      hosts: ['${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}']
+      protocol: https
+      username: ${ELASTICSEARCH_USERNAME}
+      password: ${ELASTICSEARCH_PASSWORD}
+      ssl.verification_mode: 'none'
+---
+# Deploy singleton instance in the whole cluster for some unique data sources, like kube-state-metrics
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heartbeat
+  namespace: kube-system
+  labels:
+    k8s-app: heartbeat
+spec:
+  selector:
+    matchLabels:
+      k8s-app: heartbeat
+  template:
+    metadata:
+      labels:
+        k8s-app: heartbeat
+    spec:
+      serviceAccountName: heartbeat
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: heartbeat
+        image: docker.elastic.co/beats/heartbeat:8.5.1
+        args: [
+          "-c", "/etc/heartbeat.yml",
+          "-e",
+        ]
+        env:
+        - name: ELASTICSEARCH_HOST
+          value: https://elasticsearch-master.elk-logger
+        - name: ELASTICSEARCH_PORT
+          value: "9200"
+        - name: ELASTICSEARCH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: "elasticsearch-master-credentials"
+              key: "username"
+        - name: ELASTICSEARCH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "elasticsearch-master-credentials"
+              key: "password"
+ 
+        - name: ELASTIC_CLOUD_ID
+          value:
+        - name: ELASTIC_CLOUD_AUTH
+          value:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          runAsUser: 0
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1536Mi
+          requests:
+            # for synthetics, 2 full cores is a good starting point for relatively consistent perform of a single concurrent check
+            # For lightweight checks as low as 100m is fine
+            cpu: 500m
+            # A high value like this is encouraged for browser based monitors.
+            # Lightweight checks use substantially less, even 128Mi is fine for those.
+            memory: 1536Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/heartbeat.yml
+          readOnly: true
+          subPath: heartbeat.yml
+        - name: data
+          mountPath: /usr/share/heartbeat/data
+      volumes:
+      - name: config
+        configMap:
+          defaultMode: 0600
+          name: heartbeat-deployment-config
+      - name: data
+        hostPath:
+          path: /var/lib/heartbeat-data
+          type: DirectoryOrCreate
+ 
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: heartbeat
+subjects:
+- kind: ServiceAccount
+  name: heartbeat
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: heartbeat
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: heartbeat
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: heartbeat
+    namespace: kube-system
+roleRef:
+  kind: Role
+  name: heartbeat
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: heartbeat-kubeadm-config
+  namespace: kube-system
+subjects:
+  - kind: ServiceAccount
+    name: heartbeat
+    namespace: kube-system
+roleRef:
+  kind: Role
+  name: heartbeat-kubeadm-config
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: heartbeat
+  labels:
+    k8s-app: heartbeat
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - namespaces
+  - pods
+  - services
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources:
+    - replicasets
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources:
+    - jobs
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: heartbeat
+  # should be the namespace where heartbeat is running
+  namespace: kube-system
+  labels:
+    k8s-app: heartbeat
+rules:
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs: ["get", "create", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: heartbeat-kubeadm-config
+  namespace: kube-system
+  labels:
+    k8s-app: heartbeat
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    resourceNames:
+      - kubeadm-config
+    verbs: ["get"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: heartbeat
+  namespace: kube-system
+  labels:
+    k8s-app: heartbeat
+---
