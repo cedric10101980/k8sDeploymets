@@ -47,7 +47,7 @@ logstashPipeline:
         filter {
            grok {
               match => {
-                "message" => "%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:log.level} %{NUMBER:pid} --- \[%{DATA:thread}\] \[%{DATA:logger}\] %{JAVACLASS:class} *: %{GREEDYDATA:log.message}"
+                "message" => "%{TIMESTAMP_ISO8601:timestamp} +%{LOGLEVEL:loglevel} +%{NUMBER:pid} +--- +\[%{DATA:logger}\] +%{GREEDYDATA:message}"
               }
               tag_on_failure => ["_grokparsefailure"]
             }

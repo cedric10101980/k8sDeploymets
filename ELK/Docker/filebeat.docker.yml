@@ -4,10 +4,16 @@ filebeat.config:
     reload.enabled: false
 
 filebeat.inputs:
-  - type: log
+  - type: container
     enabled: true
+    format: auto
     paths:
-      - /var/lib/docker/containers/*/*.log  # Path to Docker container logs
+      - /var/log/containers/*.log  # Path to Docker container logs
+    processors:
+      - add_host_metadata:
+          when.not.contains.tags: forwarded
+      - add_cloud_metadata: ~
+      - add_docker_metadata: ~
       
 filebeat.autodiscover:
   providers:
