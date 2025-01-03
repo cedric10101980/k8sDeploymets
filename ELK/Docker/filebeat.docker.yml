@@ -8,17 +8,24 @@ filebeat.inputs:
     enabled: true
     format: auto
     paths:
-      - /var/log/containers/*.log  # Path to Docker container logs
+      - /var/lib/docker/containers/*/*.log  # Path to Docker container logs
     processors:
       - add_host_metadata:
           when.not.contains.tags: forwarded
-      - add_cloud_metadata: ~
       - add_docker_metadata: ~
       
 filebeat.autodiscover:
   providers:
     - type: docker
       hints.enabled: true
+      templates:
+        - condition:
+            equals:
+              docker.container.labels.logging: "enabled"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
 
 processors:
   - add_cloud_metadata: ~
