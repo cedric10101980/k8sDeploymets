@@ -1,5 +1,5 @@
 ---
-replicas: 3
+replicas: 2
 
 # Allows you to add any config files in /usr/share/logstash/config/
 # such as logstash.yml and log4j2.properties
@@ -27,19 +27,13 @@ logstashPipeline:
         input {
              kafka {
                 bootstrap_servers => "elk-kafka-headless:9092"
-                topics => ["filebeat-logs", "outbound-campaigns-local"]
+                topics => ["filebeat-logs"]
                 codec => json
                 consumer_threads => 20
              }
              kafka {
                 bootstrap_servers => "elk-kafka-headless:9092"
                 topics => ["filebeat-docker-logs"]
-                codec => json
-                consumer_threads => 20
-             }
-             kafka {
-                bootstrap_servers => "elk-kafka-headless:9092"
-                topics => ["outbound-contacts-actors-logs"]
                 codec => json
                 consumer_threads => 20
              }
@@ -66,19 +60,33 @@ logstashPipeline:
             }
         }
         output {
-             
+          if [@metadata][kafka][topic] == "filebeat-logs" {
             elasticsearch {
               hosts => ["https://elasticsearch-master:9200"]
               user => '${ELASTIC_USERNAME}'
               password => '${ELASTIC_PASSWORD}'
-              ilm_rollover_alias => "obaaslogs"
-              index => "filebeat-8.5.1"
+              ilm_rollover_alias => "filebeat-logs-alias"
+              index => "filebeat-logs"
               ilm_pattern => "000001"
               ilm_policy => "logs"
               manage_template => true
               ssl => true
               ssl_certificate_verification => false
             }
+          } else if [@metadata][kafka][topic] == "filebeat-docker-logs" {
+            elasticsearch {
+              hosts => ["https://elasticsearch-master:9200"]
+              user => '${ELASTIC_USERNAME}'
+              password => '${ELASTIC_PASSWORD}'
+              ilm_rollover_alias => "filebeat-docker-logs"
+              index => "filebeat-docker-logs"
+              ilm_pattern => "000001"
+              ilm_policy => "logs"
+              manage_template => true
+              ssl => true
+              ssl_certificate_verification => false
+            }
+          }
         }
 
 # Allows you to add any pattern files in your custom pattern dir
