@@ -8,7 +8,7 @@ metadata:
     k8s-app: metricbeat
 data:
   metricbeat.yml: |-
-    setup.dashboards.enabled: true
+    setup.dashboards.enabled: false
     setup.kibana.host: "kibana-kibana.elk-logger:5601"
     setup.kibana.protocol: "https"
     setup.kibana.username: ${ELASTICSEARCH_USERNAME}
@@ -176,10 +176,26 @@ spec:
           "-system.hostfs=/hostfs",
         ]
         env:
+        - name: KAFKA_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: elk-env
+              key: KAFKA_HOST
+        - name: KAFKA_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: elk-env
+              key: KAFKA_PORT
         - name: ELASTICSEARCH_HOST
-          value: https://elasticsearch-master.elk-logger
+          valueFrom:
+            configMapKeyRef:
+              name: elk-env
+              key: ELASTICSEARCH_HOST
         - name: ELASTICSEARCH_PORT
-          value: "9200"
+          valueFrom:
+            configMapKeyRef:
+              name: elk-env
+              key: ELASTICSEARCH_PORT
         - name: ELASTICSEARCH_USERNAME
           valueFrom:
             secretKeyRef:

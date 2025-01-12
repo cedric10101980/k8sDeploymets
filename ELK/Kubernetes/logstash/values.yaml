@@ -25,39 +25,58 @@ logstashConfig:
 logstashPipeline: 
   logstash.conf: |
         input {
-             kafka {
-                bootstrap_servers => "elk-kafka-headless:9092"
-                topics => ["filebeat-logs"]
-                codec => json
-                consumer_threads => 20
-             }
-             kafka {
-                bootstrap_servers => "elk-kafka-headless:9092"
-                topics => ["filebeat-docker-logs"]
-                codec => json
-                consumer_threads => 20
-             }
+            kafka {
+            bootstrap_servers => "10.92.19.44:32400"
+            topics => ["filebeat-logs", "filebeat-docker-logs"]
+            codec => json
+            consumer_threads => 20
+            decorate_events => true
+          }
         }
         filter {
-           grok {
-              match => {
-                "message" => "%{TIMESTAMP_ISO8601:timestamp} +%{LOGLEVEL:loglevel} +%{NUMBER:pid} +--- +\[%{DATA:logger}\] +%{GREEDYDATA:message}"
+          if [@metadata][kafka][topic] == "filebeat-logs" 
+          {
+            grok {
+                match => {
+                  "message" => "%{TIMESTAMP_ISO8601:timestamp} +%{LOGLEVEL:loglevel} +%{NUMBER:pid} +--- +\[%{DATA:logger}\] +%{GREEDYDATA:message}"
+                }
+                tag_on_failure => ["_grokparsefailure"]
               }
-              tag_on_failure => ["_grokparsefailure"]
-            }
 
-            if ("_grokparsefailure" in [tags]) {
+              if ("_grokparsefailure" in [tags]) {
+                  grok {
+                    match => {
+                      "message" => "(?<TimeStamp>%{MONTHDAY:Day} %{MONTH:Month} %{YEAR:Year} %{HOUR}:%{MINUTE}:%{SECOND},%{WORD:Milliseconds}) \[%{DATA:ThreadName}] *%{WORD:LogLevel} *- %{DATA:ClassName}\.%{DATA:FunctionName}(:%{NUMBER:LineNumber})? *- %{GREEDYDATA:LogMessage}"
+                    }
+                    remove_tag => ["_grokparsefailure"]
+                  }
+              }
+              
+              date {
+                match => ["timestamp", "ISO8601"]
+              }
+            }
+            else if [@metadata][kafka][topic] == "filebeat-docker-logs" {
+              grok {
+                match => {
+                  "message" => "%{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:loglevel} %{NUMBER:pid} --- \[%{DATA:thread}\] \[%{DATA:logger}\] %{JAVACLASS:class} *: %{GREEDYDATA:log.message}"
+                }
+                tag_on_failure => ["_grokparsefailure"]
+              }
+
+              if "_grokparsefailure" in [tags] {
                 grok {
                   match => {
-                    "message" => "(?<TimeStamp>%{MONTHDAY:Day} %{MONTH:Month} %{YEAR:Year} %{HOUR}:%{MINUTE}:%{SECOND},%{WORD:Milliseconds}) \[%{DATA:ThreadName}] *%{WORD:LogLevel} *- %{DATA:ClassName}\.%{DATA:FunctionName}(:%{NUMBER:LineNumber})? *- %{GREEDYDATA:LogMessage}"
+                    "message" => "%{TIMESTAMP_ISO8601:timestamp} %{WORD:timezone} \[%{NUMBER:pid}\] %{LOGLEVEL:log.level}:  %{GREEDYDATA:log.message}"
                   }
                   remove_tag => ["_grokparsefailure"]
                 }
-            }
-            
-            date {
-              match => ["timestamp", "ISO8601"]
-            }
+              }
+
+              date {
+                match => ["timestamp", "ISO8601"]
+              }
+           }
         }
         output {
           if [@metadata][kafka][topic] == "filebeat-logs" {
@@ -65,8 +84,8 @@ logstashPipeline:
               hosts => ["https://elasticsearch-master:9200"]
               user => '${ELASTIC_USERNAME}'
               password => '${ELASTIC_PASSWORD}'
-              ilm_rollover_alias => "filebeat-logs-alias"
-              index => "filebeat-logs"
+              ilm_rollover_alias => "k8s-logs"
+              index => "filebeat-index"
               ilm_pattern => "000001"
               ilm_policy => "logs"
               manage_template => true
@@ -78,8 +97,8 @@ logstashPipeline:
               hosts => ["https://elasticsearch-master:9200"]
               user => '${ELASTIC_USERNAME}'
               password => '${ELASTIC_PASSWORD}'
-              ilm_rollover_alias => "filebeat-docker-logs"
-              index => "filebeat-docker-logs"
+              ilm_rollover_alias => "docker-logs"
+              index => "filebeat-docker-index"
               ilm_pattern => "000001"
               ilm_policy => "logs"
               manage_template => true
