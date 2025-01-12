@@ -11,8 +11,8 @@ data:
     filebeat.inputs:
     - type: container
       paths:
-        - "/var/log/containers/outbound*.log"
-        - "/var/log/containers/aidev*.log"
+        - "/var/log/containers/*outbound*.log"
+        - "/var/log/containers/*aidev*.log"
      
       multiline.type: pattern
       multiline.pattern: '^[[0-9]{4}-[0-9]{2}-[0-9]{2}'
@@ -29,17 +29,6 @@ data:
                   namespace: "outbound"
               - namespace:
                   namespace: "aidev"
-
-    # To enable hints based autodiscover, remove `filebeat.inputs` configuration and uncomment this:
-    #filebeat.autodiscover:
-    #  providers:
-    #    - type: kubernetes
-    #      node: ${NODE_NAME}
-    #      hints.enabled: true
-    #      hints.default_config:
-    #        type: container
-    #        paths:
-    #          - /var/log/containers/*${data.kubernetes.container.id}.log
 
     setup.ilm.enabled: false
     setup.ilm.overwrite: false
