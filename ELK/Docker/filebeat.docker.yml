@@ -29,6 +29,8 @@ filebeat.autodiscover:
 
 processors:
   - add_cloud_metadata: ~
+  - add_host_metadata: ~
+  - add_docker_metadata: ~
 
 output.kafka:
   enabled: true
