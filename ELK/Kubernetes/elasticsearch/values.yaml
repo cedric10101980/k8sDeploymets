@@ -126,7 +126,7 @@ volumeClaimTemplate:
   storageClassName: "local-path"
   resources:
     requests:
-      storage: 75Gi
+      storage: 10Gi
  
 rbac:
   create: false

@@ -15,7 +15,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 ## Kafka Cluster
-replicaCount: 3
+replicaCount: 2
 maxUnavailable: 1
 
 ## Kafka Configuration
@@ -24,9 +24,9 @@ heapOpts: -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0
 confluentSupportMetricsEnable: false
 autoCreateTopicsEnable: true
 deleteTopicEnable: true
-offsetsTopicReplicationFactor: 3
+offsetsTopicReplicationFactor: 2
 numPartitions: 3
-defaultReplicationFactor: 3
+defaultReplicationFactor: 2
 minInsyncReplicas: 2
 uncleanLeaderElectionEnable: false
 logFlushIntervalMessages: 10000
@@ -79,7 +79,7 @@ zookeeper:
 ## ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
 data:
   storageClass: "local-path"
-  storageSize: 50Gi
+  storageSize: 10Gi
 
 ## Configure Liveness and Readiness Probes
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes
