@@ -2,6 +2,8 @@ services:
   postgresql:
     image: postgres:14
     hostname: postgresql
+    ports:
+      - "5433:5432"  # Map port 5433 on the host to port 5432 in the container
     volumes:
       - pg_data:/var/lib/postgresql/data
     environment:
@@ -16,9 +18,9 @@ services:
       retries: 5
 
   conduktor-console:
-    image: conduktor/conduktor-console:1.31.0
+    image: conduktor/conduktor-console:1.30.0
     ports:
-      - "8080:8080"
+      - "8082:8080"
     volumes:
       - conduktor_data:/var/conduktor
     environment:
@@ -33,7 +35,7 @@ services:
         condition: service_healthy
       
   conduktor-monitoring:
-    image: conduktor/conduktor-console-cortex:1.31.0
+    image: conduktor/conduktor-console-cortex:1.30.0
     environment:
       CDK_CONSOLE-URL: "http://conduktor-console:8080"
 volumes:

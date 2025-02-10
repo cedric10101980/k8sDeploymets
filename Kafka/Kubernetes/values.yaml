@@ -1,0 +1,13 @@
+kafka:
+  replicaCount: 3
+  configurationOverrides:
+    server.properties: |
+      process.roles=broker,controller
+      node.id=1
+      controller.quorum.voters=1@localhost:9093
+      listeners=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      log.dirs=/bitnami/kafka/data
+      # Add other necessary configurations here
+
+zookeeper:
+  enabled: false

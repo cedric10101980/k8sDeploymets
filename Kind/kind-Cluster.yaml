@@ -1,12 +1,45 @@
-apiVersion: kind.x-k8s.io/v1alpha4
+# https://kind.sigs.k8s.io/docs/user/using-wsl2/
+# kind create cluster --config=kind-cluster-config.yaml
 kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
-  extraPortMappings:
-  - containerPort: 30092
-    hostPort: 30092
-    listenAddress: "0.0.0.0" # Optional, defaults to "0.0.0.0"
-    protocol: tcp # Optional, defaults to tcp
+  # Ingress
+  kubeadmConfigPatches:
+    - |
+      kind: InitConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "ingress-ready=true"
+
 - role: worker
+  kubeadmConfigPatches:
+    - |
+      kind: JoinConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "topology.kubernetes.io/zone=dummy"
+
 - role: worker
+  kubeadmConfigPatches:
+    - |
+      kind: JoinConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "topology.kubernetes.io/zone=dummy"
+
 - role: worker
+  kubeadmConfigPatches:
+    - |
+      kind: JoinConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "topology.kubernetes.io/zone=dummy"
+
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."metam-docker-hosted.forge.avaya.com".tls]
+      insecure_skip_verify = true
+
+    [plugins."io.containerd.grpc.v1.cri".registry.configs."flex-docker-hosted.forge.avaya.com".tls]
+      insecure_skip_verify = true

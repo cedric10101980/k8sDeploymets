@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  selector:
+    matchLabels:
+      app: ingress-nginx
+  template:
+    metadata:
+      labels:
+        app: ingress-nginx
+    spec:
+      containers:
+      - name: controller
+        image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.32.0
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"            
+            memory: "256Mi"
+        args:
+        - /nginx-ingress-controller
+        - --tcp-services-configmap=kafka/tcp-services

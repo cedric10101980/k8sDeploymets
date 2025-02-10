@@ -15,7 +15,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 ## Kafka Cluster
-replicaCount: 2
+replicaCount: 3
 maxUnavailable: 1
 
 ## Kafka Configuration
@@ -49,9 +49,11 @@ port:
   kafkaExternal: 9094
 externalAccess:
   enabled: true
-  initNodePort: 32400
+  service:
+    type: LoadBalancer
+      
 ## turn to support nodePort in docker desktop
-isDocker: false
+isDocker: true
 
 ## Kafka Broker Kerberos
 ## ref: https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_gssapi.html#brokers
@@ -79,7 +81,7 @@ zookeeper:
 ## ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
 data:
   storageClass: "local-path"
-  storageSize: 10Gi
+  storageSize: 5Gi
 
 ## Configure Liveness and Readiness Probes
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-probes
