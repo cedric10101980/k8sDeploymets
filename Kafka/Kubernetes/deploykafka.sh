@@ -13,6 +13,4 @@ helm repo update
 sleep 2
 helm upgrade --install elk-kafka rhcharts/kafka -f kafkavalues.yaml  -n elk-logger
 sleep 5
-#kubectl apply -f filebeat-kubernetes.yaml
-#sleep 5
-#helm upgrade --install logstash elastic/logstash --namespace elk-logger -f ./logstash.yaml
+

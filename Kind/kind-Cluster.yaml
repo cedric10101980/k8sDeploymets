@@ -5,6 +5,19 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
   # Ingress
+  extraPortMappings:
+  - containerPort: 32400
+    hostPort: 32400
+    listenAddress: "0.0.0.0" # Optional, defaults to "0.0.0.0"
+    protocol: tcp # Optional, defaults to tcp
+  - containerPort: 32401
+    hostPort: 32401
+    listenAddress: "0.0.0.0" # Optional, defaults to "0.0.0.0"
+    protocol: tcp # Optional, defaults to tcp
+  - containerPort: 32402
+    hostPort: 32402
+    listenAddress: "0.0.0.0" # Optional, defaults to "0.0.0.0"
+    protocol: tcp # Optional, defaults to tcp
   kubeadmConfigPatches:
     - |
       kind: InitConfiguration
